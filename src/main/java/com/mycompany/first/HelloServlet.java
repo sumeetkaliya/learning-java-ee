@@ -4,6 +4,8 @@
  */
 package com.mycompany.first;
 
+
+import jakarta.annotation.Resource;
 import jakarta.servlet.RequestDispatcher;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -12,6 +14,13 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import javax.sql.DataSource;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+
+        
 
 /**
  *
@@ -20,50 +29,56 @@ import jakarta.servlet.http.HttpServletResponse;
 @WebServlet(name = "HelloServlet", urlPatterns = {"/HelloServlet"})
 public class HelloServlet extends HttpServlet {
 
-  
+@Resource(name="jdbc/myfirstsql")
+private DataSource dataSource;
 
     
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-       response.setContentType("text/html");
-       PrintWriter out = response.getWriter(); 
-      
-       String name = request.getParameter("name"); // get values from parameters 
-       if(name == null || name.trim().isEmpty())
-       {
-           name = "Guest";
-       }
-       out.println("Hello " + name);
-       
-       out.println("<html>");
-       out.println("<head>");
-       out.println("</head>");
-       out.println("<body>");
-       out.println("<h3> Here is heading from println </h4>");
-       out.println("</body> </html>");
-       
-       out.println("<form action='HelloServlet' method='get'>");
-out.println("Enter your name: ");
-out.println("<input type='text' name='name'>");
-out.println("<input type='submit' value='Submit'>");
-out.println("</form>");
-       
-    String message = "message from servlet";
-    
-    request.setAttribute("msg", message);
+     List<String> users = new ArrayList<>();
 
-    RequestDispatcher rd = request.getRequestDispatcher("home.jsp");
+    try (Connection con = dataSource.getConnection()) {
+
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery("SELECT name FROM users");
+
+        while (rs.next()) {
+            users.add(rs.getString("name"));
+        }
+
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+    }
+
+    request.setAttribute("userList", users);
+
+    RequestDispatcher rd = request.getRequestDispatcher("users.jsp");
     rd.forward(request, response);
-       
+
+    
+    
     }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        String name = request.getParameter("name");
+       
+        
+        // code for jsp 
+        
+         String name = request.getParameter("username");
+
+    String message = "Hello " + name + ", welcome to JSP & Servlet!";
+
+    request.setAttribute("msg", message);
+
+    RequestDispatcher rd = request.getRequestDispatcher("result.jsp");
+    rd.forward(request, response);
+        
+        
                 
     }
 
